@@ -38,14 +38,16 @@
         .then(p => {
           document.title = p.name + " - Chi tiết sản phẩm";
 
-          const images = [p.image, ...(p.images || [])].filter(Boolean);
+          const images = [(p.image || '/default.jpg'), ...(p.images || [])].filter(Boolean);
 
           content.innerHTML = `
             <div class="row">
               <div class="col-md-6">
-                <img src="${images[0]}" class="main-img mb-3" id="mainImage" />
+                <img src="${images[0]}" onerror="this.src='/default.jpg'" class="main-img mb-3" id="mainImage" />
                 <div class="d-flex gap-2 flex-wrap">
-                  ${images.map(img => `<img src="${img}" class="thumb" onclick="document.getElementById('mainImage').src='${img}'">`).join("")}
+                  ${images.map(img => `
+                    <img src="${img}" onerror="this.src='/default.jpg'" class="thumb" onclick="document.getElementById('mainImage').src='${img}'">
+                  `).join("")}
                 </div>
               </div>
               <div class="col-md-6 info-box">
@@ -69,7 +71,7 @@
             </div>
           `;
 
-          // Đếm ngược thời gian
+          // Đếm ngược
           const el = document.getElementById("countdown");
           function updateCountdown() {
             const now = new Date();

@@ -43,6 +43,12 @@ function ProductDetail() {
     }
   };
 
+  const getImageUrl = (image) => {
+    if (!image) return '/default.jpg';
+    if (image.startsWith('http')) return image;
+    return `https://vietdaugia-api.onrender.com${image}`;
+  };
+
   if (!product) return <div className="container mt-5">Đang tải chi tiết sản phẩm...</div>;
 
   return (
@@ -52,10 +58,11 @@ function ProductDetail() {
         <div className="row g-0">
           <div className="col-md-5">
             <img
-              src={product.image}
+              src={getImageUrl(product.image)}
               alt={product.name}
               className="img-fluid rounded-start"
               style={{ height: '100%', objectFit: 'cover' }}
+              onError={(e) => { e.target.onerror = null; e.target.src = '/default.jpg'; }}
             />
           </div>
           <div className="col-md-7">
@@ -65,7 +72,7 @@ function ProductDetail() {
                 <strong>Giá khởi điểm:</strong> {product.startingPrice.toLocaleString()}đ<br />
                 <strong>Giá hiện tại:</strong> {product.currentPrice.toLocaleString()}đ
               </p>
-              <p className="card-text"><strong>Mô tả:</strong> {product.description}</p>
+              <p className="card-text"><strong>Mô tả:</strong> {product.description || 'Không có mô tả'}</p>
 
               <form onSubmit={handleBid} className="mt-4">
                 <div className="mb-3">
