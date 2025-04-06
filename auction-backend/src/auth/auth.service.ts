@@ -13,7 +13,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user.toObject();
+      const { password, ...result } = user.toJSON();
       return result;
     }
     throw new UnauthorizedException('Sai email hoặc mật khẩu');
@@ -38,7 +38,7 @@ export class AuthService {
       password: hashed,
       role: 'buyer',
     });
-    const { password, ...result } = newUser.toObject();
+    const { password, ...result } = newUser.toJSON();
     return result;
   }
 }
