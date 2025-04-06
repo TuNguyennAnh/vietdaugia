@@ -19,10 +19,11 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+
   // ✅ GIỚI HẠN DUNG LƯỢNG BODY
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
   await app.listen(process.env.PORT || 3000);
 }
