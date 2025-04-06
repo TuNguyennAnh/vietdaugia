@@ -16,6 +16,9 @@ export class Product {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true }) // 👈 Thêm dòng này
   seller: Types.ObjectId;
+
+  @Prop({ required: true })
+  endTime: Date;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

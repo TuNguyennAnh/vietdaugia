@@ -31,6 +31,7 @@ export class ProductsService {
       ...data,
       seller: sellerId,
       currentPrice: data.startingPrice,
+      endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 ngày sau
     });
     return product.save();
   }
