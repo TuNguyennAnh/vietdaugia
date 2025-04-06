@@ -15,4 +15,13 @@ export class UsersService {
     const user = new this.userModel(userData);
     return user.save();
   }
+
+  async findAll(): Promise<User[]> {
+    return this.userModel.find({}, { password: 0 }).exec(); // ẩn mật khẩu
+  }
+
+  async updateUserRole(id: string, newRole: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(id, { role: newRole });
+  }
+    
 }

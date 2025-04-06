@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trang cá nhân</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="container mt-5">
+  <h2>📊 Dashboard người dùng</h2>
+  <div id="userInfo" class="mb-3"></div>
+  <div id="dashboardContent"></div>
+
+  <script>
+    const token = localStorage.getItem("access_token");
+    const userEmail = localStorage.getItem("user_email");
+    const userRole = localStorage.getItem("user_role");
+
+    const userInfoEl = document.getElementById("userInfo");
+    const dashboardContent = document.getElementById("dashboardContent");
+
+    if (!token || !userRole) {
+      userInfoEl.innerHTML = `
+        <div class="alert alert-danger">
+          ❌ Bạn chưa đăng nhập.
+        </div>
+      `;
+    } else {
+      userInfoEl.innerHTML = `
+        <div class="alert alert-info">
+          👤 Xin chào <strong>${userEmail}</strong> (${userRole})
+        </div>
+      `;
+
+      if (userRole === 'buyer') {
+        dashboardContent.innerHTML = `
+          <div class="alert alert-primary">
+            🛍️ Đây là khu vực của người mua. (Tính năng theo dõi sản phẩm đã đấu giá sẽ được cập nhật sau.)
+          </div>
+        `;
+      }
+
+      if (userRole === 'seller') {
+        dashboardContent.innerHTML = `<div class="text-muted">🔄 Đang tải danh sách sản phẩm...</div>`;
+
+        fetch('https://vietdaugia-api.onrender.com/products', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+          .then(res => res.json())
+          .then(data => {
+            const sellerEmail = userEmail;
+
+            const list = data
+              .filter(p => p.seller === sellerEmail || p.seller?.email === sellerEmail)
+              .map((p, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td>${p.name}</td>
+                  <td>${p.currentPrice.toLocaleString()} VNĐ</td>
+                  <td>
+                    <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p._id}')">
+                      🗑️ Xóa
+                    </button>
+                  </td>
+                </tr>
+              `).join("");
+
+            dashboardContent.innerHTML = `
+              <h5 class="mt-4">🛒 Sản phẩm đã đăng</h5>
+              <table class="table table-bordered">
+                <thead>
+                  <tr><th>#</th><th>Tên</th><th>Giá hiện tại</th><th>Thao tác</th></tr>
+                </thead>
+                <tbody>${list || '<tr><td colspan="4">Chưa có sản phẩm nào.</td></tr>'}</tbody>
+              </table>
+            `;
+          })
+          .catch(err => {
+            dashboardContent.innerHTML = `
+              <div class="alert alert-danger">❌ Không tải được danh sách sản phẩm. ${err.message}</div>
+            `;
+          });
+      }
+
+      if (userRole === 'admin') {
+        dashboardContent.innerHTML = `
+          <div class="alert alert-warning">
+            🛡️ Bạn là quản trị viên. Truy cập <a href="/manage-users.html">Quản lý người dùng</a>.
+          </div>
+        `;
+      }
+    }
+
+    async function deleteProduct(productId) {
+      const confirmDel = confirm("Bạn có chắc chắn muốn xóa sản phẩm này?");
+      if (!confirmDel) return;
+
+      const res = await fetch(`https://vietdaugia-api.onrender.com/products/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        alert("✅ Đã xóa sản phẩm!");
+        location.reload();
+      } else {
+        const err = await res.text();
+        alert("❌ Lỗi xóa sản phẩm: " + err);
+      }
+    }
+  </script>
+</body>
+</html>

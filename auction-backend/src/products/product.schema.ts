@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type ProductDocument = Product & Document;
 
@@ -14,11 +14,8 @@ export class Product {
   @Prop({ required: true })
   currentPrice: number;
 
-  @Prop()
-  image: string;
-
-  @Prop()
-  description: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true }) // 👈 Thêm dòng này
+  seller: Types.ObjectId;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
