@@ -1,9 +1,13 @@
-import { applyDecorators, UseGuards } from '@nestjs/common';
+import { SetMetadata, UseGuards, applyDecorators } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
 
-export function RequireRole(role: string) {
+export const ROLES_KEY = 'roles';
+
+// ✅ Gắn metadata roles
+export const RequireRole = (...roles: string[]) => {
   return applyDecorators(
-    UseGuards(JwtAuthGuard, new RolesGuard(role))
+    SetMetadata(ROLES_KEY, roles),
+    UseGuards(JwtAuthGuard, RolesGuard)
   );
-}
+};

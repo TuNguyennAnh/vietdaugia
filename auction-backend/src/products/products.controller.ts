@@ -29,7 +29,7 @@ export class ProductsController {
     return this.productsService.getById(id);
   }
 
-  @RequireRole('seller')
+  @RequireRole('seller','admin')
   @Post()
   async create(
     @Body() body: CreateProductDto,
@@ -51,7 +51,7 @@ export class ProductsController {
     };
   }
 
-  @RequireRole('seller')
+  @RequireRole('seller','admin')
   @Delete(':id')
   async delete(@Param('id') id: string, @Request() req) {
     return this.productsService.delete(id, req.user.sub);
