@@ -67,7 +67,7 @@
     const token = localStorage.getItem("access_token");
     const role = localStorage.getItem("user_role");
     const msgEl = document.getElementById("message");
-
+  
     if (!token || role !== "seller") {
       msgEl.innerHTML = `
         <div class="alert alert-danger mt-3">
@@ -75,19 +75,19 @@
         </div>`;
       form.style.display = "none";
     }
-
+  
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
+  
       const product = {
         name: document.getElementById("name").value,
         description: document.getElementById("description").value,
         category: document.getElementById("category").value,
         startingPrice: +document.getElementById("startingPrice").value,
-        endTime: new Date(document.getElementById("endTime").value).toISOString(),
+        endTime: new Date(document.getElementById("endTime").value).toISOString(),  // ✅ Sửa tại đây
         image: document.getElementById("image").value,
       };
-
+  
       const res = await fetch("https://vietdaugia-api.onrender.com/products", {
         method: "POST",
         headers: {
@@ -96,7 +96,7 @@
         },
         body: JSON.stringify(product),
       });
-
+  
       if (res.ok) {
         msgEl.innerHTML = `<div class="alert alert-success mt-3">✅ Đăng sản phẩm thành công!</div>`;
         form.reset();
