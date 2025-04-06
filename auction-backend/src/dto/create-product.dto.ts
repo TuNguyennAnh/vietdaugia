@@ -5,14 +5,6 @@ export class CreateProductDto {
   @IsString()
   name: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  startingPrice: number;
-
-  @IsNotEmpty()
-  @IsString()
-  image: string;
-
   @IsOptional()
   @IsString()
   description?: string;
@@ -21,7 +13,16 @@ export class CreateProductDto {
   @IsString()
   category?: string;
 
+  @IsNotEmpty()
+  @IsNumber()
+  startingPrice: number;
+
+  @IsNotEmpty()
+  @IsString()
+  image: string;
+
+  // ✅ THÊM TRƯỜNG NÀY nếu muốn cho phép người dùng chọn thời gian kết thúc
   @IsOptional()
   @IsDateString()
-  endTime?: string; // 👈 Thêm dòng này nếu muốn cho chọn thời gian kết thúc
+  endTime?: string;
 }
