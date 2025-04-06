@@ -9,6 +9,10 @@ import { Product, ProductDocument } from './product.schema';
 import { Model } from 'mongoose';
 import { CreateProductDto } from '../dto/create-product.dto';
 
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -27,12 +31,31 @@ export class ProductsService {
   }
 
   async create(data: CreateProductDto, sellerId: string): Promise<Product> {
+    let imageUrl = data.image;
+
+    // ✅ Nếu là ảnh base64 thì lưu vào /uploads và lấy URL
+    if (data.image && data.image.startsWith('data:image')) {
+      const matches = data.image.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1].split('/')[1];
+        const base64Data = matches[2];
+        const filename = `${uuidv4()}.${ext}`;
+        const filePath = path.join(__dirname, '..', '..', 'uploads', filename);
+
+        fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+
+        imageUrl = `https://vietdaugia-api.onrender.com/uploads/${filename}`;
+      }
+    }
+
     const product = new this.productModel({
       ...data,
+      image: imageUrl,
       seller: sellerId,
       currentPrice: data.startingPrice,
       endTime: data.endTime ? new Date(data.endTime) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     });
+
     return product.save();
   }
 

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, IsDateString } from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -18,10 +18,10 @@ export class CreateProductDto {
   startingPrice: number;
 
   @IsOptional()
-  @IsDateString() // ⚠️ Dùng ISO format như "2025-04-20T09:00:00Z"
+  @IsDateString()
   endTime?: string;
 
   @IsOptional()
   @IsString()
-  image?: string;
+  image?: string; // Có thể là base64 hoặc URL
 }
