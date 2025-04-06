@@ -1,24 +1,13 @@
-// src/auth/jwt.strategy.ts
-import { Injectable } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+// src/auth/roles.decorator.ts
+import { SetMetadata, UseGuards, applyDecorators } from '@nestjs/common';
+import { RolesGuard } from './roles.guard';
+import { JwtAuthGuard } from './jwt-auth.guard'; // Nếu có custom JwtGuard, nếu không thì dùng 'AuthGuard("jwt")' bên ngoài
 
-@Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'your_jwt_secret', // đổi bằng env thật
-    });
-  }
+export const ROLES_KEY = 'roles';
 
-  async validate(payload: any) {
-    // Gắn giá trị trả về vào req.user
-    return {
-      sub: payload._id,           // 👈 dùng đúng _id bạn gán lúc tạo token
-      email: payload.email,
-      role: payload.role,
-    };
-  }
+export function RequireRole(...roles: string[]) {
+  return applyDecorators(
+    SetMetadata(ROLES_KEY, roles),
+    UseGuards(JwtAuthGuard, RolesGuard),
+  );
 }
