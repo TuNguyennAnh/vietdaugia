@@ -13,15 +13,11 @@ function ProductList() {
 
   // ✅ Xử lý ảnh hiển thị
   const getImageUrl = (image) => {
-    if (!image) return '/default.jpg';
-    if (image.startsWith('data:image')) return image; // base64
-    if (image.startsWith('http')) return image; // ảnh link đầy đủ
-    if (image.startsWith('/uploads/')) {
-      return `https://vietdaugia-api.onrender.com${image}`;
-    }
-    return '/default.jpg';
+    if (!image) return '/default.jpg'; // fallback nếu không có ảnh
+    if (image.startsWith('http')) return image; // ảnh là link đầy đủ
+    return `https://vietdaugia-api.onrender.com${image}`; // ảnh là /uploads/abc.jpg
   };
-
+  
   return (
     <div className="container mt-4">
       <h1 className="mb-4 text-center">Sản phẩm đấu giá</h1>

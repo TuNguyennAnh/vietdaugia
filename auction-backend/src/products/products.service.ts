@@ -55,7 +55,7 @@ export class ProductsService {
 
     const product = new this.productModel({
       ...data,
-      image, // Đã xử lý xong
+      image, // <--- đã sửa
       seller: sellerId,
       currentPrice: data.startingPrice,
       endTime: data.endTime
