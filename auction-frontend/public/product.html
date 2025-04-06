@@ -38,7 +38,6 @@
         .then(p => {
           document.title = p.name + " - Chi tiết sản phẩm";
 
-          const endTime = new Date(p.endTime);
           const images = [p.image, ...(p.images || [])].filter(Boolean);
 
           content.innerHTML = `
@@ -60,7 +59,7 @@
                   <label for="bidInput" class="form-label">Giá bạn muốn đặt (tối thiểu ${p.currentPrice + 1}đ):</label>
                   <input type="number" class="form-control" id="bidInput" />
                   <button class="btn btn-success mt-2" onclick="placeBid()">Đặt giá</button>
-                  <p id="bidMessage" class="mt-2 text-danger"></p>
+                  <p id="bidMessage" class="mt-2"></p>
                 </div>
               </div>
             </div>
@@ -70,11 +69,17 @@
             </div>
           `;
 
-          // Đếm ngược
+          // Đếm ngược thời gian
           const el = document.getElementById("countdown");
           function updateCountdown() {
             const now = new Date();
-            const diff = endTime - now;
+            const end = new Date(p.endTime);
+            if (isNaN(end.getTime())) {
+              el.innerText = "Không xác định";
+              el.classList.replace("bg-dark", "bg-warning");
+              return;
+            }
+            const diff = end - now;
             if (diff <= 0) {
               el.innerText = "Đã kết thúc";
               el.classList.replace("bg-dark", "bg-danger");
@@ -85,10 +90,10 @@
             const s = Math.floor((diff % 60000) / 1000);
             el.innerText = `${h}h ${m}m ${s}s`;
           }
-
           updateCountdown();
           setInterval(updateCountdown, 1000);
 
+          // Đặt giá
           window.placeBid = function() {
             const token = localStorage.getItem("access_token");
             const bid = parseInt(document.getElementById("bidInput").value);
@@ -96,6 +101,13 @@
 
             if (!token) {
               messageEl.innerHTML = "❌ Bạn cần đăng nhập để đặt giá.";
+              messageEl.className = "mt-2 text-danger";
+              return;
+            }
+
+            if (isNaN(bid) || bid <= p.currentPrice) {
+              messageEl.innerHTML = `❌ Giá bạn đặt phải lớn hơn ${p.currentPrice}đ`;
+              messageEl.className = "mt-2 text-danger";
               return;
             }
 
@@ -113,10 +125,12 @@
               })
               .then(data => {
                 messageEl.innerHTML = "✅ Đặt giá thành công!";
+                messageEl.className = "mt-2 text-success";
                 setTimeout(() => window.location.reload(), 1000);
               })
               .catch(err => {
                 messageEl.innerHTML = `❌ ${err.message}`;
+                messageEl.className = "mt-2 text-danger";
               });
           }
         })
