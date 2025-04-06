@@ -17,12 +17,11 @@ export class CreateProductDto {
   @IsNumber()
   startingPrice: number;
 
-  @IsNotEmpty()
-  @IsString()
-  image: string;
-
-  // ✅ THÊM TRƯỜNG NÀY nếu muốn cho phép người dùng chọn thời gian kết thúc
   @IsOptional()
-  @IsDateString()
+  @IsDateString() // ⚠️ Dùng ISO format như "2025-04-20T09:00:00Z"
   endTime?: string;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
