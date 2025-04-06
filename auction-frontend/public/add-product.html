@@ -5,11 +5,12 @@
   <title>Thêm sản phẩm</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet"/>
 </head>
 <body class="container py-5">
   <h2>🛒 Thêm sản phẩm mới</h2>
   <div id="message"></div>
-  
+
   <form id="addForm" class="mt-4">
     <div class="mb-3">
       <label class="form-label">Tên sản phẩm:</label>
@@ -55,19 +56,27 @@
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Ảnh sản phẩm (URL):</label>
-      <input type="url" class="form-control" id="image" />
+      <label class="form-label">Ảnh sản phẩm:</label>
+      <input type="file" class="form-control" id="imageInput" accept="image/*" />
+      <div class="mt-2">
+        <img id="imagePreview" style="max-width: 100%; max-height: 300px; display: none;" />
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary">Đăng sản phẩm</button>
   </form>
 
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
   <script>
     const form = document.getElementById("addForm");
     const token = localStorage.getItem("access_token");
     const role = localStorage.getItem("user_role");
     const msgEl = document.getElementById("message");
-  
+
+    const imageInput = document.getElementById("imageInput");
+    const imagePreview = document.getElementById("imagePreview");
+    let cropper;
+
     if (!token || role !== "seller") {
       msgEl.innerHTML = `
         <div class="alert alert-danger mt-3">
@@ -75,19 +84,38 @@
         </div>`;
       form.style.display = "none";
     }
-  
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      imagePreview.src = url;
+      imagePreview.style.display = "block";
+
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(imagePreview, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 1,
+      });
+    });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-  
+
+      const canvas = cropper?.getCroppedCanvas();
+      const base64Image = canvas?.toDataURL("image/jpeg");
+
       const product = {
         name: document.getElementById("name").value,
         description: document.getElementById("description").value,
         category: document.getElementById("category").value,
         startingPrice: +document.getElementById("startingPrice").value,
-        endTime: new Date(document.getElementById("endTime").value).toISOString(),  // ✅ Sửa tại đây
-        image: document.getElementById("image").value,
+        endTime: new Date(document.getElementById("endTime").value).toISOString(),
+        image: base64Image,
       };
-  
+
       const res = await fetch("https://vietdaugia-api.onrender.com/products", {
         method: "POST",
         headers: {
@@ -96,10 +124,12 @@
         },
         body: JSON.stringify(product),
       });
-  
+
       if (res.ok) {
         msgEl.innerHTML = `<div class="alert alert-success mt-3">✅ Đăng sản phẩm thành công!</div>`;
         form.reset();
+        imagePreview.style.display = "none";
+        cropper?.destroy();
       } else {
         const err = await res.text();
         msgEl.innerHTML = `<div class="alert alert-danger mt-3">❌ Lỗi: ${err}</div>`;
