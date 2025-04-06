@@ -8,11 +8,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'vietdaugia-secret',
+      secretOrKey: process.env.JWT_SECRET || 'your_jwt_secret', // thay bằng biến môi trường thật nếu có
     });
   }
 
   async validate(payload: any) {
-    return { userId: payload.sub, email: payload.email, role: payload.role };
+    return {
+      sub: payload.sub || payload._id, // hỗ trợ cả sub và _id tùy theo lúc tạo token
+      email: payload.email,
+      role: payload.role,
+    };
   }
 }
