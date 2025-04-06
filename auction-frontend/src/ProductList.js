@@ -11,17 +11,15 @@ function ProductList() {
       .catch(err => console.error('Lỗi gọi API:', err));
   }, []);
 
-  // ✅ Xử lý ảnh hiển thị
   const getImageUrl = (image) => {
-    if (!image) return '/default.jpg';
-    if (image.startsWith('data:image')) return image; // base64
-    if (image.startsWith('http')) return image; // URL đầy đủ
+    if (!image) return 'https://vietdaugia-api.onrender.com/uploads/default.jpg';
+    if (image.startsWith('data:image')) return image;
+    if (image.startsWith('http')) return image;
     if (image.startsWith('/uploads/')) {
       return `https://vietdaugia-api.onrender.com${image}`;
     }
-    return '/default.jpg'; // fallback nếu định dạng lạ
+    return 'https://vietdaugia-api.onrender.com/uploads/default.jpg';
   };
-  
 
   return (
     <div className="container mt-4">
@@ -38,7 +36,10 @@ function ProductList() {
                 className="card-img-top"
                 alt={product.name}
                 style={{ height: '200px', objectFit: 'cover' }}
-                onError={(e) => { e.target.onerror = null; e.target.src = '/default.jpg'; }}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://vietdaugia-api.onrender.com/uploads/default.jpg';
+                }}
               />
               <div className="card-body d-flex flex-column">
                 <h5 className="card-title">{product.name}</h5>
