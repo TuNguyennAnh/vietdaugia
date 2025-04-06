@@ -3,23 +3,25 @@ import {
   Get,
   Post,
   Patch,
-  Delete, // ✅ bổ sung
+  Delete,
   Body,
   Param,
-  NotFoundException,
+  Query,
   Request,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './product.schema';
 import { RequireRole } from '../auth/roles.decorator';
+import { CreateProductDto } from '../dto/create-product.dto';
+import { BidDto } from '../dto/bid.dto';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  async getAll(): Promise<Product[]> {
-    return this.productsService.getAll();
+  async getAll(@Query('category') category?: string): Promise<Product[]> {
+    return this.productsService.getAll(category);
   }
 
   @Get(':id')
@@ -29,7 +31,10 @@ export class ProductsController {
 
   @RequireRole('seller')
   @Post()
-  async create(@Body() body, @Request() req) {
+  async create(
+    @Body() body: CreateProductDto,
+    @Request() req,
+  ): Promise<Product> {
     const sellerId = req.user.sub;
     return this.productsService.create(body, sellerId);
   }
@@ -37,9 +42,9 @@ export class ProductsController {
   @Patch(':id/bid')
   async bid(
     @Param('id') id: string,
-    @Body('bid') bid: number,
+    @Body() body: BidDto,
   ): Promise<{ message: string; product: Product }> {
-    const product = await this.productsService.updateBid(id, bid);
+    const product = await this.productsService.updateBid(id, body.bid);
     return {
       message: 'Đặt giá thành công',
       product,

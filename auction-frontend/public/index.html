@@ -30,53 +30,92 @@
       object-fit: cover;
       border-radius: 5px;
     }
+    .category-item.active {
+      background-color: #0d6efd;
+      color: white;
+    }
   </style>
 </head>
 <body class="container py-4">
   <div class="row">
+    <!-- CỘT DANH MỤC -->
     <div class="col-md-3">
       <div class="category-list">
         <h5>Danh mục</h5>
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item">Đồ điện tử, AV & Máy ảnh</li>
-          <li class="list-group-item">Đồng hồ & Phụ kiện</li>
-          <li class="list-group-item">Điện tử văn phòng</li>
-          <li class="list-group-item">Nhà cửa đời sống</li>
-          <li class="list-group-item">Thể thao & Giải trí</li>
-          <li class="list-group-item">Văn hóa phẩm</li>
-          <li class="list-group-item">Thời trang - Phụ kiện</li>
-          <li class="list-group-item">Âm nhạc</li>
-          <li class="list-group-item">Sưu tầm đồ cổ</li>
-          <li class="list-group-item">Đồ trẻ em</li>
-          <li class="list-group-item">Sức khỏe & Làm đẹp</li>
-          <li class="list-group-item">Xe đạp</li>
+        <ul class="list-group list-group-flush" id="categoryList">
+          <li class="list-group-item category-item active" data-category="">Tất cả</li>
+          <li class="list-group-item category-item" data-category="Đồ điện tử, AV & Máy ảnh">Đồ điện tử, AV & Máy ảnh</li>
+          <li class="list-group-item category-item" data-category="Đồng hồ & Phụ kiện">Đồng hồ & Phụ kiện</li>
+          <li class="list-group-item category-item" data-category="Điện tử văn phòng">Điện tử văn phòng</li>
+          <li class="list-group-item category-item" data-category="Nhà cửa đời sống">Nhà cửa đời sống</li>
+          <li class="list-group-item category-item" data-category="Thể thao & Giải trí">Thể thao & Giải trí</li>
+          <li class="list-group-item category-item" data-category="Văn hóa phẩm">Văn hóa phẩm</li>
+          <li class="list-group-item category-item" data-category="Thời trang - Phụ kiện">Thời trang - Phụ kiện</li>
+          <li class="list-group-item category-item" data-category="Âm nhạc">Âm nhạc</li>
+          <li class="list-group-item category-item" data-category="Sưu tầm đồ cổ">Sưu tầm đồ cổ</li>
+          <li class="list-group-item category-item" data-category="Đồ trẻ em">Đồ trẻ em</li>
+          <li class="list-group-item category-item" data-category="Sức khỏe & Làm đẹp">Sức khỏe & Làm đẹp</li>
+          <li class="list-group-item category-item" data-category="Ô tô, Xe máy, Xe đạp">Ô tô, Xe máy, Xe đạp</li>
+          <li class="list-group-item category-item" data-category="Phim, video">Phim, video</li>
+          <li class="list-group-item category-item" data-category="Đồ chơi & Trò chơi">Đồ chơi & Trò chơi</li>
+          <li class="list-group-item category-item" data-category="Sách & Tạp chí">Sách & Tạp chí</li>
         </ul>
       </div>
     </div>
+
+    <!-- CỘT SẢN PHẨM -->
     <div class="col-md-9">
       <h4>Sản phẩm đấu giá</h4>
       <div id="productList" class="row g-3 mt-2"></div>
     </div>
   </div>
 
+  <!-- SCRIPT XỬ LÝ -->
   <script>
-    fetch("https://vietdaugia-api.onrender.com/products")
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("productList");
-        if (!Array.isArray(data) || data.length === 0) return;
+    const categoryItems = document.querySelectorAll('.category-item');
 
-        container.innerHTML = data.map(p => `
-          <div class="col-md-4">
-            <div class="product-card">
-              <img src="${p.image}" class="img-fluid product-img" alt="${p.name}">
-              <h6 class="mt-2">${p.name}</h6>
-              <p>Giá hiện tại: <strong>${p.currentPrice.toLocaleString()}đ</strong></p>
-              <a href="/product.html?id=${p._id}" class="btn btn-sm btn-primary w-100">Xem chi tiết</a>
-            </div>
-          </div>
-        `).join("");
+    categoryItems.forEach(item => {
+      item.addEventListener('click', () => {
+        categoryItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        const category = item.getAttribute('data-category');
+        loadProducts(category);
       });
+    });
+
+    function loadProducts(category = '') {
+      const container = document.getElementById("productList");
+      container.innerHTML = '<div class="text-muted">🔄 Đang tải sản phẩm...</div>';
+
+      let url = 'https://vietdaugia-api.onrender.com/products';
+      if (category) {
+        url += `?category=${encodeURIComponent(category)}`;
+      }
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = `<div class="alert alert-warning">⚠️ Không có sản phẩm nào trong danh mục này.</div>`;
+            return;
+          }
+
+          container.innerHTML = data.map(p => `
+            <div class="col-md-4">
+              <div class="product-card">
+                <img src="${p.image}" class="img-fluid product-img" alt="${p.name}">
+                <h6 class="mt-2">${p.name}</h6>
+                <p>Giá hiện tại: <strong>${p.currentPrice.toLocaleString()}đ</strong></p>
+                <a href="/product.html?id=${p._id}" class="btn btn-sm btn-primary w-100">Xem chi tiết</a>
+              </div>
+            </div>
+          `).join('');
+        });
+    }
+
+    // Load mặc định toàn bộ khi vào trang
+    loadProducts();
   </script>
 </body>
 </html>
