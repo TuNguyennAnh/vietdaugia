@@ -33,26 +33,34 @@ export class ProductsService {
   async create(data: CreateProductDto, sellerId: string): Promise<Product> {
     let image = data.image;
 
-    // ✅ Nếu là ảnh base64 thì lưu vào /uploads và lấy URL
+    // ✅ Nếu là ảnh base64 thì lưu vào thư mục uploads
     if (data.image?.startsWith('data:image')) {
       const matches = data.image.match(/^data:image\/(\w+);base64,(.+)$/);
       if (!matches) throw new BadRequestException('Ảnh không hợp lệ');
+
       const ext = matches[1];
       const base64Data = matches[2];
       const filename = `${uuidv4()}.${ext}`;
       const filePath = path.join(__dirname, '..', '..', 'uploads', filename);
-    
+
+      // ✅ Đảm bảo thư mục uploads tồn tại
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+      // ✅ Ghi ảnh
       fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-    
-      image = `/uploads/${filename}`; // ✅ đúng biến
+
+      // ✅ Gán đường dẫn ảnh cho frontend dùng
+      image = `/uploads/${filename}`;
     }
 
     const product = new this.productModel({
       ...data,
-      image, // ✅ đúng biến
+      image, // Đã xử lý xong
       seller: sellerId,
       currentPrice: data.startingPrice,
-      endTime: data.endTime ? new Date(data.endTime) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      endTime: data.endTime
+        ? new Date(data.endTime)
+        : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     });
 
     return product.save();
