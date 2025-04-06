@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -13,9 +13,15 @@ export class CreateProductDto {
   @IsString()
   image: string;
 
+  @IsOptional()
   @IsString()
   description?: string;
 
+  @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endTime?: string; // 👈 Thêm dòng này nếu muốn cho chọn thời gian kết thúc
 }
