@@ -3,86 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <title>Chi tiết sản phẩm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .thumb { width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd; cursor: pointer; }
+    .thumb:hover { border-color: #0d6efd; }
+    .main-img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; border: 1px solid #ccc; }
+    .info-box { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .countdown { font-size: 1.2rem; font-weight: bold; }
+  </style>
 </head>
-<body class="container mt-5">
-  <h2>📦 Chi tiết sản phẩm</h2>
-  <div id="productInfo" class="mt-4"></div>
+<body class="container py-4">
 
-  <div id="bidFormArea" class="mt-4"></div>
+  <!-- 🌐 Thanh điều hướng -->
+  <div class="d-flex justify-content-between mb-4">
+    <div>
+      <a href="/" class="btn btn-outline-primary btn-sm">🏠 Trang chủ</a>
+    </div>
+    <div>
+      <a href="/login.html" class="btn btn-outline-secondary btn-sm">Đăng nhập</a>
+      <a href="/register.html" class="btn btn-outline-secondary btn-sm">Đăng ký</a>
+      <a href="/dashboard.html" class="btn btn-outline-success btn-sm">Dashboard</a>
+    </div>
+  </div>
+
+  <div id="content"></div>
 
   <script>
-    const params = new URLSearchParams(location.search);
-    const productId = params.get("id");
     const token = localStorage.getItem("access_token");
+    const content = document.getElementById("content");
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-    async function loadProduct() {
-      const res = await fetch(`https://vietdaugia-api.onrender.com/products/${productId}`);
-      const p = await res.json();
+    if (!id) {
+      content.innerHTML = `<div class="alert alert-danger">Không tìm thấy sản phẩm.</div>`;
+    } else {
+      fetch(`https://vietdaugia-api.onrender.com/products/${id}`)
+        .then(res => res.json())
+        .then(p => {
+          document.title = p.name + " - Chi tiết sản phẩm";
+          const endTime = new Date(p.endTime);
+          const images = [p.image, ...(p.images || [])].filter(Boolean);
 
-      const html = `
-        <div class="row">
-          <div class="col-md-6">
-            <img src="${p.image || 'https://via.placeholder.com/500x300?text=No+Image'}" class="img-fluid" />
-          </div>
-          <div class="col-md-6">
-            <h3>${p.name}</h3>
-            <p>${p.description || "Không có mô tả"}</p>
-            <p>Giá khởi điểm: <strong>${p.startingPrice?.toLocaleString()}đ</strong></p>
-            <p>Giá hiện tại: <strong>${p.currentPrice?.toLocaleString()}đ</strong></p>
-            <p>Người bán: ${p.seller?.email || "Ẩn"}</p>
-          </div>
-        </div>
-      `;
-      document.getElementById("productInfo").innerHTML = html;
+          content.innerHTML = `
+            <div class="row">
+              <div class="col-md-6">
+                <img src="${images[0]}" class="main-img mb-3" id="mainImage" />
+                <div class="d-flex gap-2 flex-wrap">
+                  ${images.map(img => `<img src="${img}" class="thumb" onclick="document.getElementById('mainImage').src='${img}'">`).join("")}
+                </div>
+              </div>
+              <div class="col-md-6 info-box">
+                <h3>${p.name}</h3>
+                <p><strong>Giá hiện tại:</strong> ${p.currentPrice.toLocaleString()}đ</p>
+                <p><strong>Giá khởi điểm:</strong> ${p.startingPrice.toLocaleString()}đ</p>
+                <p><strong>Thời gian còn lại:</strong> <span class="badge bg-dark countdown" id="countdown">...</span></p>
+                
+                <div class="mt-4">
+                  <h5>💰 Đặt giá</h5>
+                  <div class="mb-2">Giá bạn muốn đặt (tối thiểu ${p.currentPrice + 1}đ):</div>
+                  <input type="number" id="bidInput" class="form-control mb-2" min="${p.currentPrice + 1}" />
+                  <button class="btn btn-success" onclick="submitBid(${p.currentPrice + 1})">Đặt giá</button>
+                  <div id="message" class="mt-2 text-danger"></div>
+                </div>
+              </div>
+            </div>
 
-      showBidForm(p.currentPrice);
+            <div class="mt-4">
+              <h5>📄 Mô tả sản phẩm</h5>
+              <p>${p.description || "Không có mô tả"}</p>
+            </div>
+          `;
+
+          // Đếm ngược
+          const el = document.getElementById("countdown");
+          function updateCountdown() {
+            const now = new Date();
+            const diff = endTime - now;
+            if (diff <= 0) {
+              el.innerText = "Đã kết thúc";
+              el.classList.replace("bg-dark", "bg-danger");
+              return;
+            }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            el.innerText = `${h}h ${m}m ${s}s`;
+          }
+
+          updateCountdown();
+          setInterval(updateCountdown, 1000);
+        })
+        .catch(err => {
+          content.innerHTML = `<div class="alert alert-danger">Lỗi tải sản phẩm.</div>`;
+        });
     }
 
-    function showBidForm(currentPrice) {
+    async function submitBid(min) {
+      const price = parseInt(document.getElementById("bidInput").value);
+      const msgEl = document.getElementById("message");
+      msgEl.innerText = "";
+
       if (!token) {
-        document.getElementById("bidFormArea").innerHTML = `<div class="alert alert-warning">⚠️ Vui lòng đăng nhập để đặt giá.</div>`;
+        msgEl.innerText = "❌ Bạn cần đăng nhập để đặt giá.";
         return;
       }
 
-      document.getElementById("bidFormArea").innerHTML = `
-        <h4>💰 Đặt giá</h4>
-        <form id="bidForm">
-          <div class="mb-3">
-            <label for="bid" class="form-label">Giá bạn muốn đặt (tối thiểu ${currentPrice + 1}đ):</label>
-            <input type="number" id="bid" class="form-control" required min="${currentPrice + 1}" />
-          </div>
-          <button class="btn btn-success">Đặt giá</button>
-        </form>
-        <p class="mt-3" id="msg"></p>
-      `;
+      if (!price || price < min) {
+        msgEl.innerText = `❌ Giá phải lớn hơn ${min}đ`;
+        return;
+      }
 
-      const bidForm = document.getElementById("bidForm");
-      bidForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const bidValue = parseInt(document.getElementById("bid").value);
-
-        const res = await fetch(`https://vietdaugia-api.onrender.com/products/${productId}/bid`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ bid: bidValue }),
-        });
-
-        const msgEl = document.getElementById("msg");
-        if (res.ok) {
-          msgEl.innerHTML = `<span class="text-success">✅ Đặt giá thành công!</span>`;
-          loadProduct();
-        } else {
-          const err = await res.text();
-          msgEl.innerHTML = `<span class="text-danger">❌ Lỗi: ${err}</span>`;
-        }
+      const res = await fetch(`https://vietdaugia-api.onrender.com/products/${id}/bid`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bid: price }),
       });
-    }
 
-    loadProduct();
+      if (res.ok) {
+        alert("✅ Đặt giá thành công!");
+        location.reload();
+      } else {
+        const err = await res.text();
+        msgEl.innerText = "❌ " + err;
+      }
+    }
   </script>
 </body>
 </html>
